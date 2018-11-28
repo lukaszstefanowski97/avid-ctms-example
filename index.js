@@ -143,7 +143,7 @@ function getAssetItem(accessToken, assetUrl){
             else {
                 body = JSON.parse(body);
                 const id = body._embedded['loc:referenced-object'].base.id;
-                console.log(id);
+                console.log('\n\n', id);
                 getAssetDetails(accessToken, id);
                 return body;
             }
@@ -179,7 +179,7 @@ function getAssetDetails(accessToken, id) {
             if (err) console.error(err);
             else {
                 body = JSON.parse(body);
-                console.log(body)
+                console.log('\n\n', body);
                 return body;
             }
         }
