@@ -4,6 +4,7 @@ const headers = {
     Authorization: ""
 };
 headers['Content-Type'] = "application/x-www-form-urlencoded";
+const serviceRoot = "https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots";
 
 const formData = {
     grant_type: "password",
@@ -24,31 +25,14 @@ request.post(
         if (err) console.error(err);
         else console.log('\n\n', body);
         const accessToken = JSON.parse(body).access_token;
-        getAssetInfo(accessToken);
+        returnAssetId(accessToken);
     }
 );
 
-function getAssetInfo(accessToken) {
+function getRequest(url, accessToken, callback) {
     request.get(
         {
-            url: 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796',
-            rejectUnauthorized: false,
-            auth: {
-                bearer: accessToken
-            },
-            headers: {
-                Authorization: accessToken
-            }
-        },
-        function (err, httpResponse, body) {
-            if (err) console.error(err);
-            else console.log('\n\n', JSON.parse(body));
-        }
-    );
-
-    request.get(
-        {
-            url: `https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets${id}`,
+            url: url,
             rejectUnauthorized: false,
             auth: {
                 bearer: accessToken
@@ -60,7 +44,31 @@ function getAssetInfo(accessToken) {
         },
         function (err, httpResponse, body) {
             if (err) console.error(err);
-            else console.log('\n\n', JSON.parse(body));
+            else {
+                console.log('\n\n', JSON.parse(body));
+                const dirName = 'loc:root-item';
+                const objectName = 'loc:item';
+                let url = body;
+                if (body.systems.systemTypeName === 'MediaCentral | Production Management') url = body.resources.dirName.href;
+                if (body.base.id === '/') {
+                    body._embedded._links.forEach(function (element) {
+                        if (body._embedded._links.contains('Projects')) url = element;
+                    });
+                }
+
+                callback(url, accessToken);
+            }
         }
     );
+}
+
+function returnAssetId(accessToken) {
+    getRequest(serviceRoot, accessToken,
+        getRequest(...args, getRequest(
+            getRequest(...args, getRequest(
+                getRequest(...args, getRequest(
+                    getRequest(...args, getRequest(
+                        getRequest(...args, getRequest(
+                            getRequest(...args, getRequest(
+                            )))))))))))));
 }
