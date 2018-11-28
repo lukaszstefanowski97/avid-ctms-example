@@ -70,7 +70,7 @@ function getLocations(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                return body.resources['loc:root-item'][0].href;
+                chooseHref(body, 'Projects');
             }
         }
     );
@@ -94,7 +94,7 @@ function getProjectsDir(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                return body.resources['loc:root-item'][0].href;
+                chooseHref(body, 'DTK');
             }
         }
     );
@@ -119,7 +119,7 @@ function getDTKDir(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                return body.resources['loc:root-item'][0].href;
+                chooseHref(body, 'https');
             }
         }
     );
@@ -149,10 +149,9 @@ function getAssetItem(accessToken){
     );
 }
 
-
 function chooseHref(body, containsString) {
     body._embedded._links['loc:item'].forEach(function (element) {
-        if (body._embedded._links['loc:item'].contains(containsString)) return element;
+        if (body._embedded._links['loc:item'].contains(containsString)) console.log(element);
     });
 }
 
