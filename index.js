@@ -29,7 +29,7 @@ request.post(
     }
 );
 
-function getRequest(url, accessToken, callback) {
+function getRequest(url, accessToken, callback=0) {
     request.get(
         {
             url: url,
@@ -45,21 +45,27 @@ function getRequest(url, accessToken, callback) {
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
+                let url = 'https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots';
                 console.log('\n\n', JSON.parse(body));
-                const dirName = 'loc:root-item';
-                const objectName = 'loc:item';
-                let url = body;
-                if (body.systems.systemTypeName === 'MediaCentral | Production Management') url = body.resources.dirName.href;
-                if (body.base.id === '/') {
-                    body._embedded._links.forEach(function (element) {
-                        if (body._embedded._links.contains('Projects')) url = element;
-                    });
+                if (body.systems.systemTypeName === 'MediaCentral | Production Management') url = body.resources['loc:root-item'][0].href;
+                if (body.base.id === '/') url = chooseHref(body, 'Projects');
+                if (body.base.id === '/Projects/') url = chooseHref(body, 'DTK');
+                if (body.base.id === '/Projects/DTK/') url = chooseHref(body, 'https');
+                if (body.base.type === 'folder-item') {
+                    return body.base.id;
                 }
-
-                callback(url, accessToken);
+                if (callback) {
+                    callback(url, accessToken);
+                }
             }
         }
     );
+}
+
+function chooseHref(body, containsString) {
+    body._embedded._links['loc:item'].forEach(function (element) {
+        if (body._embedded._links['loc:item'].contains(containsString)) return element;
+    });
 }
 
 function returnAssetId(accessToken) {
@@ -67,8 +73,12 @@ function returnAssetId(accessToken) {
         getRequest(...args, getRequest(
             getRequest(...args, getRequest(
                 getRequest(...args, getRequest(
-                    getRequest(...args, getRequest(
-                        getRequest(...args, getRequest(
-                            getRequest(...args, getRequest(
-                            )))))))))))));
+                    getRequest(...args)
+                    )
+                )
+                )
+            )
+            )
+        )
+    );
 }
