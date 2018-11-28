@@ -24,8 +24,7 @@ request.post(
         if (err) console.error(err);
         else console.log('\n\n', body);
         const accessToken = JSON.parse(body).access_token;
-        let id = returnAssetId(accessToken);
-        console.log(id)
+        returnAssetId(accessToken);
     }
 );
 
@@ -44,20 +43,20 @@ function getRootService(accessToken){
             }
         },
         function (err, httpResponse, body) {
+            body = JSON.parse(body);
             if (err) console.error(err);
             else {
-                return body.resources['loc:root-item'][0].href;
+                const url = body.resources['loc:root-item'][0].href;
+                return getLocations(accessToken, url);
             }
         }
     );
 }
 
-function getLocations(accessToken){
-    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
-        'ders/%2F?offset=0&limit=25';
+function getLocations(accessToken, rootServiceUrl){
     request.get(
         {
-            url: url,
+            url: rootServiceUrl,
             rejectUnauthorized: false,
             auth: {
                 bearer: accessToken
@@ -70,18 +69,18 @@ function getLocations(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                chooseHref(body, 'Projects');
+                body = JSON.parse(body);
+                const url = chooseHref(body, 'Projects');
+                return getProjectsDir(accessToken, url);
             }
         }
     );
 }
 
-function getProjectsDir(accessToken){
-    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
-        'ders/%2FProjects%2F?offset=0&limit=25';
+function getProjectsDir(accessToken, dirUrl){
     request.get(
         {
-            url: url,
+            url: dirUrl,
             rejectUnauthorized: false,
             auth: {
                 bearer: accessToken
@@ -94,19 +93,18 @@ function getProjectsDir(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                chooseHref(body, 'DTK');
+                body = JSON.parse(body);
+                const url = chooseHref(body, 'DTK');
+                return getDTKDir(accessToken, url);
             }
         }
     );
 }
 
-
-function getDTKDir(accessToken){
-    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
-        'ders/%2FProjects%2FDTK%2F?offset=0&limit=25';
+function getDTKDir(accessToken, dtkUrl){
     request.get(
         {
-            url: url,
+            url: dtkUrl,
             rejectUnauthorized: false,
             auth: {
                 bearer: accessToken
@@ -119,18 +117,18 @@ function getDTKDir(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                chooseHref(body, 'https');
+                body = JSON.parse(body);
+                const url = chooseHref(body, 'https');
+                return getAssetItem(accessToken, url);
             }
         }
     );
 }
 
-function getAssetItem(accessToken){
-    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/ite' +
-        'ms/%2FProjects%2FDTK%2F060a2b340101010101010f0013-000000-5a8ee637566b03b4-060e2b347f7f-2a80';
+function getAssetItem(accessToken, assetUrl){
     request.get(
         {
-            url: url,
+            url: assetUrl,
             rejectUnauthorized: false,
             auth: {
                 bearer: accessToken
@@ -143,6 +141,10 @@ function getAssetItem(accessToken){
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
+                body = JSON.parse(body);
+                const id = body._embedded['loc:referenced-object'].base.id;
+                console.log(id);
+                getAssetDetails(accessToken, id);
                 return body;
             }
         }
@@ -150,16 +152,40 @@ function getAssetItem(accessToken){
 }
 
 function chooseHref(body, containsString) {
-    body._embedded._links['loc:item'].forEach(function (element) {
-        if (body._embedded._links['loc:item'].contains(containsString)) console.log(element);
+    let url;
+    body._embedded['loc:collection']._links['loc:item'].forEach(function (element) {
+        if (element.href.includes(containsString)){
+            url = element.href;
+        }
     });
+    return url;
+}
+
+function getAssetDetails(accessToken, id) {
+    const url = `https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
+    request.get(
+        {
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        },
+        function (err, httpResponse, body) {
+            if (err) console.error(err);
+            else {
+                body = JSON.parse(body);
+                console.log(body)
+                return body;
+            }
+        }
+    );
 }
 
 function returnAssetId(accessToken) {
     getRootService(accessToken);
-    getLocations(accessToken);
-    getProjectsDir(accessToken);
-    getDTKDir(accessToken);
-    let asset = getAssetItem(accessToken);
-    return asset.base.id;
 }
