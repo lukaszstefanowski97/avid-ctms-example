@@ -4,7 +4,6 @@ const headers = {
     Authorization: ""
 };
 headers['Content-Type'] = "application/x-www-form-urlencoded";
-const serviceRoot = "https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots";
 
 const formData = {
     grant_type: "password",
@@ -25,11 +24,13 @@ request.post(
         if (err) console.error(err);
         else console.log('\n\n', body);
         const accessToken = JSON.parse(body).access_token;
-        returnAssetId(accessToken);
+        let id = returnAssetId(accessToken);
+        console.log(id)
     }
 );
 
-function getRequest(url, accessToken, callback=0) {
+function getRootService(accessToken){
+    const url = 'https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots';
     request.get(
         {
             url: url,
@@ -45,22 +46,109 @@ function getRequest(url, accessToken, callback=0) {
         function (err, httpResponse, body) {
             if (err) console.error(err);
             else {
-                let url = 'https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots';
-                console.log('\n\n', JSON.parse(body));
-                if (body.systems.systemTypeName === 'MediaCentral | Production Management') url = body.resources['loc:root-item'][0].href;
-                if (body.base.id === '/') url = chooseHref(body, 'Projects');
-                if (body.base.id === '/Projects/') url = chooseHref(body, 'DTK');
-                if (body.base.id === '/Projects/DTK/') url = chooseHref(body, 'https');
-                if (body.base.type === 'folder-item') {
-                    return body.base.id;
-                }
-                if (callback) {
-                    callback(url, accessToken);
-                }
+                return body.resources['loc:root-item'][0].href;
             }
         }
     );
 }
+
+function getLocations(accessToken){
+    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
+        'ders/%2F?offset=0&limit=25';
+    request.get(
+        {
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        },
+        function (err, httpResponse, body) {
+            if (err) console.error(err);
+            else {
+                return body.resources['loc:root-item'][0].href;
+            }
+        }
+    );
+}
+
+function getProjectsDir(accessToken){
+    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
+        'ders/%2FProjects%2F?offset=0&limit=25';
+    request.get(
+        {
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        },
+        function (err, httpResponse, body) {
+            if (err) console.error(err);
+            else {
+                return body.resources['loc:root-item'][0].href;
+            }
+        }
+    );
+}
+
+
+function getDTKDir(accessToken){
+    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/fol' +
+        'ders/%2FProjects%2FDTK%2F?offset=0&limit=25';
+    request.get(
+        {
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        },
+        function (err, httpResponse, body) {
+            if (err) console.error(err);
+            else {
+                return body.resources['loc:root-item'][0].href;
+            }
+        }
+    );
+}
+
+function getAssetItem(accessToken){
+    const url = 'https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/locations/ite' +
+        'ms/%2FProjects%2FDTK%2F060a2b340101010101010f0013-000000-5a8ee637566b03b4-060e2b347f7f-2a80';
+    request.get(
+        {
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        },
+        function (err, httpResponse, body) {
+            if (err) console.error(err);
+            else {
+                return body;
+            }
+        }
+    );
+}
+
 
 function chooseHref(body, containsString) {
     body._embedded._links['loc:item'].forEach(function (element) {
@@ -69,16 +157,10 @@ function chooseHref(body, containsString) {
 }
 
 function returnAssetId(accessToken) {
-    getRequest(serviceRoot, accessToken,
-        getRequest(...args, getRequest(
-            getRequest(...args, getRequest(
-                getRequest(...args, getRequest(
-                    getRequest(...args)
-                    )
-                )
-                )
-            )
-            )
-        )
-    );
+    getRootService(accessToken);
+    getLocations(accessToken);
+    getProjectsDir(accessToken);
+    getDTKDir(accessToken);
+    let asset = getAssetItem(accessToken);
+    return asset.base.id;
 }
