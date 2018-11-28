@@ -5,6 +5,8 @@ const headers = {
 };
 headers['Content-Type'] = "application/x-www-form-urlencoded";
 
+const host = '10.42.24.55';
+
 const formData = {
     grant_type: "password",
     username: "",
@@ -13,7 +15,7 @@ const formData = {
 
 request.post(
     {
-        url: 'https://10.42.24.55/auth/sso/login/oauth2/ropc/ad',
+        url: `https://${host}/auth/sso/login/oauth2/ropc/ad`,
         form: formData,
         rejectUnauthorized: false,
         headers: {
@@ -29,7 +31,7 @@ request.post(
 );
 
 function getRootService(accessToken){
-    const url = 'https://10.42.24.55/apis/avid.ctms.registry;version=0;realm=global/serviceroots';
+    const url = `https://${host}/apis/avid.ctms.registry;version=0;realm=global/serviceroots`;
     request.get(
         {
             url: url,
@@ -162,7 +164,7 @@ function chooseHref(body, containsString) {
 }
 
 function getAssetDetails(accessToken, id) {
-    const url = `https://10.42.24.55/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
+    const url = `https://${host}/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
     request.get(
         {
             url: url,

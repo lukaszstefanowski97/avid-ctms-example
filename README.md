@@ -19,3 +19,5 @@ Then using the access token we make a get call to all the dirs between us and as
 
 Once we find an asset we log it's ID and then using it we make a call to the function 'get asset by id'.
 As a result we should see a JSON file with asset's body.
+
+You can set your host by overriding 'host' variable (index.js line 9).
