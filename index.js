@@ -13,6 +13,22 @@ const formData = {
     password: ""
 };
 
+function getRequest(url, accessToken) {
+    return request_promise({
+            method: 'GET',
+            url: url,
+            rejectUnauthorized: false,
+            auth: {
+                bearer: accessToken
+            },
+            headers: {
+                Accept: 'application/hal+json',
+                Authorization: accessToken
+            }
+        }
+    );
+}
+
 function chooseHref(body, containsString) {
     console.log(body);
     let url;
@@ -48,85 +64,40 @@ request_promise({
                 Authorization: accessToken
             }
         }
-    )}).then(body => {
-        body = (JSON.parse(body));
-        const url = body.resources['loc:root-item'][0].href;
-        return request_promise({
-                method: 'GET',
-                url: url,
-                rejectUnauthorized: false,
-                auth: {
-                    bearer: accessToken
-                },
-                headers: {
-                    Accept: 'application/hal+json',
-                    Authorization: accessToken
-                }
-            }
-        );
-    }).then(body => {
-        body = JSON.parse(body);
-        const url = chooseHref(body, 'Projects');
-        return request_promise({
-            method: 'GET',
-            url: url,
-            rejectUnauthorized: false,
-            auth: {
-                bearer: accessToken
-            },
-            headers: {
-                Accept: 'application/hal+json',
-                Authorization: accessToken
-            }
-        })}).then(body => {
-            body = JSON.parse(body);
-            const url = chooseHref(body, 'DTK');
-            return request_promise({
-                method: 'GET',
-                url: url,
-                rejectUnauthorized: false,
-                auth: {
-                    bearer: accessToken
-                },
-                headers: {
-                    Accept: 'application/hal+json',
-                    Authorization: accessToken
-                }
-            })}).then(body => {
-                body = JSON.parse(body);
-                const url = chooseHref(body, 'https');
-                return request_promise({
-                    method: 'GET',
-                    url: url,
-                    rejectUnauthorized: false,
-                    auth: {
-                        bearer: accessToken
-                    },
-                    headers: {
-                        Accept: 'application/hal+json',
-                        Authorization: accessToken
-                    }
-                })}).then(body => {
-                    body = JSON.parse(body);
-                    const url = chooseHref(body, 'https');
-                    const assetId = body._embedded['loc:referenced-object'].base.id;
-                    console.log('Asset ID: ', assetId);
-                    return assetId;
-                }).then(id => {
-                    const url = `https://${host}/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
-                    return request_promise({
-                        method: 'GET',
-                        url: url,
-                        rejectUnauthorized: false,
-                        auth: {
-                            bearer: accessToken
-                        },
-                        headers: {
-                            Accept: 'application/hal+json',
-                            Authorization: accessToken
-                        }
-                    })}).then(body => {
-                        console.log(body);
-                    }).catch(function (err) {
-                        console.log(err);
-                    });
+    )
+}).then(body => {
+    body = (JSON.parse(body));
+    getRequest(body.resources['loc:root-item'][0].href, accessToken);
+}).then(body => {
+    body = (JSON.parse(body));
+    getRequest(chooseHref(body, 'Projects'), accessToken)
+}).then(body => {
+    body = (JSON.parse(body));
+    getRequest(chooseHref(body, 'DTK'), accessToken)
+}).then(body => {
+    body = (JSON.parse(body));
+    getRequest(chooseHref(body, 'https'), accessToken)
+}).then(body => {
+    body = JSON.parse(body);
+    const assetId = body._embedded['loc:referenced-object'].base.id;
+    console.log('Asset ID: ', assetId);
+    return assetId;
+}).then(id => {
+    const url = `https://${host}/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
+    return request_promise({
+        method: 'GET',
+        url: url,
+        rejectUnauthorized: false,
+        auth: {
+            bearer: accessToken
+        },
+        headers: {
+            Accept: 'application/hal+json',
+            Authorization: accessToken
+        }
+    })
+}).then(body => {
+    console.log(body);
+}).catch(function (err) {
+    console.log(err);
+});
