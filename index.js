@@ -49,21 +49,8 @@ request_promise({
         Authorization: ""
     }
 }).then(function (body) {
-    const url = `https://${host}/apis/avid.ctms.registry;version=0;realm=global/serviceroots`;
     accessToken = JSON.parse(body).access_token;
-    return request_promise({
-            method: 'GET',
-            url: url,
-            rejectUnauthorized: false,
-            auth: {
-                bearer: accessToken
-            },
-            headers: {
-                Accept: 'application/hal+json',
-                Authorization: accessToken
-            }
-        }
-    )
+    return getRequest(`https://${host}/apis/avid.ctms.registry;version=0;realm=global/serviceroots`, accessToken);
 }).then(body => {
     body = (JSON.parse(body));
     return getRequest(body.resources['loc:root-item'][0].href, accessToken);
