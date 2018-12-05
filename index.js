@@ -30,9 +30,8 @@ function getRequest(url, accessToken) {
 }
 
 function chooseHref(body, containsString) {
-    console.log(body);
     let url;
-    body.base._embedded['loc:collection']['_links'].forEach(function (element) {
+    body._embedded['loc:collection']._links['loc:item'].forEach(function (element) {
         if (element.href.includes(containsString)) {
             url = element.href;
         }
@@ -67,16 +66,16 @@ request_promise({
     )
 }).then(body => {
     body = (JSON.parse(body));
-    getRequest(body.resources['loc:root-item'][0].href, accessToken);
+    return getRequest(body.resources['loc:root-item'][0].href, accessToken);
+}).then(body => {
+    body = JSON.parse(body);
+    return getRequest(chooseHref(body, 'Projects'), accessToken)
 }).then(body => {
     body = (JSON.parse(body));
-    getRequest(chooseHref(body, 'Projects'), accessToken)
+    return getRequest(chooseHref(body, 'DTK'), accessToken)
 }).then(body => {
     body = (JSON.parse(body));
-    getRequest(chooseHref(body, 'DTK'), accessToken)
-}).then(body => {
-    body = (JSON.parse(body));
-    getRequest(chooseHref(body, 'https'), accessToken)
+    return getRequest(chooseHref(body, 'https'), accessToken)
 }).then(body => {
     body = JSON.parse(body);
     const assetId = body._embedded['loc:referenced-object'].base.id;
