@@ -70,18 +70,7 @@ request_promise({
     return assetId;
 }).then(id => {
     const url = `https://${host}/apis/avid.pam;version=2;realm=B1C9D208-7A67-47BB-B392-6E307AC6F796/assets/${id}`;
-    return request_promise({
-        method: 'GET',
-        url: url,
-        rejectUnauthorized: false,
-        auth: {
-            bearer: accessToken
-        },
-        headers: {
-            Accept: 'application/hal+json',
-            Authorization: accessToken
-        }
-    })
+    return getRequest(url, accessToken);
 }).then(body => {
     console.log(JSON.parse(body));
 }).catch(function (err) {
