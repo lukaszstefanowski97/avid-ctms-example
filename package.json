@@ -11,6 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.3",
-    "joi": "^13.1.0"
+    "joi": "^13.1.0",
+    "promise-spread": "^0.1.0",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
   }
 }
