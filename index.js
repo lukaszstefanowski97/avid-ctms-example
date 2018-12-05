@@ -96,7 +96,7 @@ request_promise({
         }
     })
 }).then(body => {
-    console.log(body);
+    console.log(JSON.parse(body));
 }).catch(function (err) {
     console.log(err);
 });
